@@ -1,8 +1,7 @@
+```python
 class EpsilonNFA:
     def __init__(self):
-        # Initial state
         self.start_state = 'q0'
-        # Accept state
         self.accept_states = {'q5'}
 
     def epsilon_closure(self, states):
@@ -12,7 +11,6 @@ class EpsilonNFA:
         
         while stack:
             state = stack.pop()
-            # q2 can transition to q3 via epsilon
             if state == 'q2' and 'q3' not in closure:
                 closure.add('q3')
                 stack.append('q3')
@@ -47,43 +45,36 @@ class EpsilonNFA:
 
     def accepts(self, input_string):
         """Processes string and returns True if string is accepted."""
-        # Begin with start state and compute its epsilon-closure
         current_states = self.epsilon_closure({self.start_state})
 
         for char in input_string:
             current_states = self.move(current_states, char)
             current_states = self.epsilon_closure(current_states)
             if not current_states:
-                return False  # Dead end
+                return False  # Trap state / invalid transition
 
-        # Check if any active state is an accepting state
         return bool(current_states & self.accept_states)
 
 
-# --- Test Runner ---
-nfa = EpsilonNFA()
+# --- Interactive Terminal Checker ---
+def main():
+    nfa = EpsilonNFA()
+    print("==================================================")
+    print("   C-Style Comment Checker (ε-NFA Simulator)     ")
+    print("==================================================")
+    print("Type any string to test. Type 'exit' to quit.\n")
 
-accepted_tests = [
-    "/*a*/",
-    "/**/",
-    "/***/",
-    "/*aaa*aaa*/",
-    "/*a/a*/"
-]
+    while True:
+        user_input = input("Enter string: ")
+        
+        if user_input.lower() == 'exit':
+            print("Exiting program.")
+            break
+        
+        if nfa.accepts(user_input):
+            print(f"-> Result: ACCEPTED ✅\n")
+        else:
+            print(f"-> Result: REJECTED ❌\n")
 
-rejected_tests = [
-    "/**",
-    "/**/a/*aa*/",
-    "aaa/**/aa",
-    "/*/",
-    "/**a/",
-    "//aaaa"
-]
-
-print("--- ACCEPTED STRINGS ---")
-for s in accepted_tests:
-    print(f"'{s}': {nfa.accepts(s)}")
-
-print("\n--- REJECTED STRINGS ---")
-for s in rejected_tests:
-    print(f"'{s}': {nfa.accepts(s)}")
+if __name__ == "__main__":
+    main()
