@@ -1,3 +1,55 @@
+# C-Style Block Comment Checker ($\varepsilon$-NFA)
+
+This project implements an **$\varepsilon$-NFA (Non-Deterministic Finite Automaton with $\varepsilon$-transitions)** that parses and validates C-style block comments (`/* ... */`).
+
+---
+
+## 1. Visual Automaton Diagram
+
+```mermaid
+stateDiagram-v2
+    direction LR
+    [*] --> q0
+    q0 --> q1 : /
+    q1 --> q2 : *
+    q2 --> q3 : ε
+    q3 --> q2 : a, /
+    q2 --> q4 : *
+    q4 --> q4 : *
+    q4 --> q2 : a
+    q4 --> q5 : /
+    q5 --> [*]
+```
+
+---
+
+## 2. Formal Definition
+
+The $\varepsilon$-NFA is formally defined by the tuple $M = (Q, \Sigma, \delta, q_0, F)$:
+
+* **States ($Q$):** $\{q_0, q_1, q_2, q_3, q_4, q_5\}$
+* **Alphabet ($\Sigma$):** $\{/, *, a\}$ *(where $a$ represents any character other than $/$ or $*$)*
+* **Start State ($q_0$):** $q_0$
+* **Accept State ($F$):** $\{q_5\}$
+* **Language ($L$):** Set of all valid C-style block comments starting with `/*` and ending with `*/`.
+
+### Transition Table
+
+| State | $\varepsilon$ | `/` | `*` | `a` |
+| :--- | :--- | :--- | :--- | :--- |
+| **$\to q_0$** | $\emptyset$ | $\{q_1\}$ | $\emptyset$ | $\emptyset$ |
+| **$q_1$** | $\emptyset$ | $\emptyset$ | $\{q_2\}$ | $\emptyset$ |
+| **$q_2$** | $\{q_3\}$ | $\emptyset$ | $\{q_4\}$ | $\emptyset$ |
+| **$q_3$** | $\emptyset$ | $\{q_2\}$ | $\emptyset$ | $\{q_2\}$ |
+| **$q_4$** | $\emptyset$ | $\{q_5\}$ | $\{q_4\}$ | $\{q_2\}$ |
+| **$*q_5$** | $\emptyset$ | $\emptyset$ | $\emptyset$ | $\emptyset$ |
+
+---
+
+## 3. Python Implementation
+
+Save this file as `main.py` in your repository:
+
 ```python
 class EpsilonNFA:
     def __init__(self):
@@ -20,8 +72,6 @@ class EpsilonNFA:
     def move(self, current_states, symbol):
         """Performs state transitions based on input character."""
         next_states = set()
-        
-        # Map any character that is not '/' or '*' to 'a'
         c = symbol if symbol in {'/', '*'} else 'a'
 
         for state in current_states:
@@ -51,30 +101,22 @@ class EpsilonNFA:
             current_states = self.move(current_states, char)
             current_states = self.epsilon_closure(current_states)
             if not current_states:
-                return False  # Trap state / invalid transition
+                return False
 
         return bool(current_states & self.accept_states)
 
 
-# --- Interactive Terminal Checker ---
-def main():
-    nfa = EpsilonNFA()
-    print("==================================================")
-    print("   C-Style Comment Checker (ε-NFA Simulator)     ")
-    print("==================================================")
-    print("Type any string to test. Type 'exit' to quit.\n")
-
-    while True:
-        user_input = input("Enter string: ")
-        
-        if user_input.lower() == 'exit':
-            print("Exiting program.")
-            break
-        
-        if nfa.accepts(user_input):
-            print(f"-> Result: ACCEPTED ✅\n")
-        else:
-            print(f"-> Result: REJECTED ❌\n")
-
 if __name__ == "__main__":
-    main()
+    nfa = EpsilonNFA()
+    print("=== C-Style Comment Automaton Checker ===")
+    
+    while True:
+        user_input = input("Enter string (or 'exit' to quit): ")
+        if user_input.lower() == 'exit':
+            break
+            
+        if nfa.accepts(user_input):
+            print("--> Result: ACCEPTED ✅\n")
+        else:
+            print("--> Result: REJECTED ❌\n")
+```
